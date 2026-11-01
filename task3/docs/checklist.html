@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task 3 Report Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: lab clipboard -- sticky progress bar, items as rows: text left, example picture right */
+  --bg:#f1f3f2; --paper:#ffffff; --ink:#18201d; --muted:#5b6964; --line:#d6ddd9;
+  --accent:#0d6b5c; --accent2:#e3f2ed; --opt:#8a6d1f; --done:#eef4f1;
+  --display:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1412; --paper:#171e1b; --ink:#e3eae7; --muted:#97a6a0; --line:#2a3530;
+  --accent:#4cc3a6; --accent2:#173029; --opt:#d9b55a; --done:#13201b; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --paper:#171e1b; --ink:#e3eae7; --muted:#97a6a0; --line:#2a3530;
+  --accent:#4cc3a6; --accent2:#173029; --opt:#d9b55a; --done:#13201b; color-scheme:dark;}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--body)}
+main{max-width:1180px;margin:0 auto;padding:0 16px 80px;display:flex;flex-direction:column;gap:22px}
+main>*{min-width:0}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.bar h1{font:600 22px/1.3 var(--display);margin:0;flex:1 1 320px;text-wrap:balance}
+.prog{flex:1 1 240px;display:flex;align-items:center;gap:10px;font:600 14px var(--mono)}
+.prog .track{flex:1;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog .fill{height:100%;width:0;background:var(--accent);transition:width .2s}
+.btn{font:600 14px var(--display);border:1px solid var(--accent);color:var(--accent);background:var(--paper);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:hover{background:var(--accent2)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+p{margin:6px 0;max-width:80ch}
+code{font-family:var(--mono);font-size:.9em;overflow-wrap:anywhere}
+.note{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:14px 18px}
+.note h2{font:600 17px var(--display);margin:0 0 6px}
+.note ul{margin:4px 0;padding-left:20px}
+section{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+section>header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+section>header .n{font:700 22px var(--mono);color:var(--accent)}
+section>header h2{font:600 20px var(--display);margin:0;text-wrap:balance}
+section>header .sub{color:var(--muted);font-size:14px;flex-basis:100%}
+section>header .cnt{margin-left:auto;font:600 13px var(--mono);color:var(--muted)}
+.grp{padding:10px 20px 0;font:600 13px var(--display);color:var(--accent);letter-spacing:.02em}
+.item{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,520px);gap:14px 16px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item.noimg{grid-template-columns:34px minmax(0,1fr)}
+.item.done{background:var(--done)}
+.item.done h3{text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:2px}
+.item input[type=checkbox]{width:22px;height:22px;margin-top:3px;accent-color:var(--accent);cursor:pointer}
+.item h3{font:600 16.5px var(--display);margin:0 0 4px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.item h3 label{cursor:pointer}
+.opt{font:600 11.5px var(--display);color:var(--opt);border:1px solid var(--opt);border-radius:99px;padding:0 8px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14.5px}
+dt{font:600 13px var(--display);color:var(--muted);padding-top:2px;white-space:nowrap}
+dd{margin:0}
+dd.exp{color:var(--ink)}
+.fields{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.fields label{display:flex;flex-direction:column;font:600 12px var(--display);color:var(--muted);gap:2px}
+.fields input{font:14px var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:170px}
+.pics{display:grid;gap:10px}
+.pics.n2{grid-template-columns:1fr 1fr} .pics.n3{grid-template-columns:1fr 1fr 1fr}
+figure{margin:0}
+figure button{all:unset;cursor:zoom-in;display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+figure button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
+.tag{font:600 11px var(--display);background:var(--accent2);color:var(--accent);border-radius:4px;padding:1px 6px;margin-right:6px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font:600 13px var(--display);color:var(--muted)}
+td input{font:14px var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%;min-width:140px}
+.tw{overflow-x:auto;padding:6px 8px 10px}
+.warns{padding:14px 20px;display:grid;gap:10px}
+.warns div{border-left:4px solid #c0392b;padding:6px 12px;background:var(--bg);border-radius:4px}
+dialog{border:0;padding:0;border-radius:10px;max-width:min(96vw,1200px);background:var(--paper)}
+dialog img{display:block;max-width:100%;height:auto}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog p{margin:8px 12px;color:var(--muted);font-size:14px}
+#out{width:100%;min-height:160px;font:13px var(--mono);margin-top:8px;display:none;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.foot{font-size:13px;color:var(--muted)}
+@media (max-width:860px){
+  .item,.item.noimg{grid-template-columns:30px minmax(0,1fr)}
+  .item .pics{grid-column:2}
+  .pics.n3{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){ .bar{position:static} }
+@media (max-width:480px){ .pics.n2,.pics.n3{grid-template-columns:1fr} dl{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){.prog .fill{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="bar">
+  <h1>Task 3 · เช็กลิสต์เก็บหลักฐานทำรายงาน</h1>
+  <div class="prog" aria-live="polite"><span>ข้อบังคับ</span><div class="track"><div class="fill" id="pf"></div></div><span id="pc">0 / 0</span></div>
+  <button class="btn" id="copy" type="button">คัดลอกผลทั้งหมด</button>
+  <button class="btn ghost" id="reset" type="button">ล้าง</button>
+  <span id="resetc" hidden>ล้างติ๊กและค่าทั้งหมด? <button class="btn" id="resetyes" type="button">ล้างเลย</button> <button class="btn ghost" id="resetno" type="button">ไม่</button></span>
+  <span id="copymsg" class="foot"></span>
+  <textarea id="out" aria-label="ผลที่คัดลอก" readonly></textarea>
+</div>
+
+<div class="note">
+  <h2>ปรับจากร่างเดิมให้ตรงกับชุดที่ใช้จริง</h2>
+  <ul>
+    <li>ชุดนี้ใช้ <b>MCP3201</b> บน JP1 ไม่ได้ใช้ขา A0–A5 และ Modular ADC IP จึงย้ายเรื่องนั้นไปเป็นข้อไม่บังคับ</li>
+    <li>ช่วงแรงดันเข้าคือ <b>0–3.3 V</b> (VREF ของ MCP3201) ไม่ใช่ 0–5 V แบบ header Arduino</li>
+    <li>ทุกจุดวัดระบุขา JP1 จริงแล้ว: ขา 6 = sample strobe, 7/8 = ADC, 1/3/4 = SPI, 5 = DRDY, 13 = block</li>
+    <li>โปรแกรมแสดงผลใช้ Python (<code>run_host.bat</code>) ชื่อตัวนับคือ lost, fpga_drop, spi_err, esp_drop, bad_usb</li>
+  </ul>
+  <p class="foot">รูปทุกรูปในหน้านี้เป็น<b>ตัวอย่างจำลอง</b>: หน้าจอโปรแกรมคือ <code>task3_host.py</code> ตัวจริงที่ป้อนสัญญาณจำลอง ส่วนหน้าจอสโคปวาดจากค่าที่ออกแบบไว้ ภาพจริงควรหน้าตาคล้ายกัน ติ๊กและค่าที่กรอกจำไว้ในเบราว์เซอร์นี้เท่านั้น กด “คัดลอกผลทั้งหมด” แล้ววางในแชทเพื่อให้เขียนรายงานต่อ</p>
+</div>
+
+<section id="hw" aria-labelledby="h-hw"><header><span class="n">1</span><h2 id="h-hw">รูปฮาร์ดแวร์และซอฟต์แวร์</h2><span class="cnt" data-cnt="hw"></span><span class="sub">ถ่ายตอนต่อเสร็จและ compile ผ่านแล้ว</span></header><div class="item noimg" id="it-hw1"><input type="checkbox" id="c-hw1" data-c="hw1"><div><h3><label for="c-hw1">รูปวงจรจริงทั้งชุด</label></h3><dl><dt>ทำอย่างไร</dt><dd>ถ่ายจากด้านบนให้เห็น DE10-Lite, breadboard กับ MCP3201 และไมค์, ESP32-S3 UNO และสายทุกเส้น โดยเฉพาะสาย <b>GND ร่วม</b> (JP1 ขา 12 → GND ของ S3)</dd><dt>ต้องได้</dt><dd class="exp">เทียบกับผังภาพรวมใน Wiring Manual ได้ทีละเส้น</dd></dl></div></div><div class="item noimg" id="it-hw2"><input type="checkbox" id="c-hw2" data-c="hw2"><div><h3><label for="c-hw2">รูปใกล้ JP1 และ breadboard</label></h3><dl><dt>ทำอย่างไร</dt><dd>ซูมให้อ่านสีสายและตำแหน่งขาได้ 2 รูป: ปลาย JP1 ที่เสียบสาย และ MCP3201 บน breadboard (เห็นรอยบากชิป)</dd><dt>ต้องได้</dt><dd class="exp">ใช้คู่กับตารางต่อขาในรายงาน</dd></dl></div></div><div class="item noimg" id="it-hw3"><input type="checkbox" id="c-hw3" data-c="hw3"><div><h3><label for="c-hw3">ตารางต่อขา</label></h3><dl><dt>ทำอย่างไร</dt><dd>คัดจาก Wiring Manual ส่วนที่ 1 (MCP3201 ↔ JP1 ขา 7, 8, 10, 29, 30) และส่วนที่ 2 (JP1 ขา 1–5, 12 ↔ S3 IO12, IO11, IO13, IO10, IO14, GND)</dd><dt>ต้องได้</dt><dd class="exp">ไม่ต้องถ่าย ทำเป็นตารางในรายงาน</dd></dl></div></div><div class="item noimg" id="it-hw4"><input type="checkbox" id="c-hw4" data-c="hw4"><div><h3><label for="c-hw4">Quartus · Compilation Report → Flow Summary</label></h3><dl><dt>ทำอย่างไร</dt><dd>หลัง compile ด้วย <code>build.bat 0 3201</code> เปิด Compilation Report → Flow Summary แล้วจับหน้าจอ</dd><dt>ต้องได้</dt><dd class="exp">Logic elements ไม่ถึง 1,000 จาก 49,760 (ไม่ถึง 2%) · Memory bits ประมาณ 24,576 (บัฟเฟอร์ 2×1024×12 บิต) · M9K 3–4 บล็อก</dd></dl><div class="fields"><label for="v-le">Logic elements<input id="v-le" data-v="le" data-label="Quartus · Compilation Report → Flow Summary · Logic elements" placeholder="เช่น 812"></label><label for="v-m9k">Memory bits / M9K<input id="v-m9k" data-v="m9k" data-label="Quartus · Compilation Report → Flow Summary · Memory bits / M9K" placeholder="เช่น 24,576 / 3"></label></div></div></div><div class="item noimg" id="it-hw5"><input type="checkbox" id="c-hw5" data-c="hw5"><div><h3><label for="c-hw5">Quartus · RTL Viewer</label><span class="opt">ไม่บังคับ</span></h3><dl><dt>ทำอย่างไร</dt><dd>Tools → Netlist Viewers → RTL Viewer จับภาพระดับ top ที่เห็นบล็อก tick_gen, ADC reader, buffer, SPI slave</dd><dt>ต้องได้</dt><dd class="exp">ใช้แทน block diagram ได้</dd></dl></div></div><div class="item noimg" id="it-hw6"><input type="checkbox" id="c-hw6" data-c="hw6"><div><h3><label for="c-hw6">Quartus · หน้าตั้งค่า Modular ADC IP</label><span class="opt">ไม่บังคับ</span></h3><dl><dt>ทำอย่างไร</dt><dd><b>ข้ามได้</b> เพราะชุดนี้ใช้ MCP3201 ทำเฉพาะถ้าลองโหมด MAX 10 ADC (<code>build.bat 1</code>)</dd><dt>ต้องได้</dt><dd class="exp">ADC control core only, clock 10 MHz, Internal 2.5 V, CH1</dd></dl></div></div><div class="item noimg" id="it-hw7"><input type="checkbox" id="c-hw7" data-c="hw7"><div><h3><label for="c-hw7">Simulation: TB PASSED + waveform</label><span class="opt">ไม่บังคับ</span></h3><dl><dt>ทำอย่างไร</dt><dd>ทำที่บ้านได้: รัน testbench ตาม README ข้อ 3.4 ด้วย <code>-gPART=3201 -gMSCLK=800000</code> จับข้อความ <code>TB PASSED</code> และ waveform ช่วง SPI กับช่วงอ่าน MCP</dd><dt>ต้องได้</dt><dd class="exp">หลักฐานว่า logic ถูกก่อนลงบอร์ด</dd></dl></div></div><div class="item noimg" id="it-hw8"><input type="checkbox" id="c-hw8" data-c="hw8"><div><h3><label for="c-hw8">โค้ดทั้งหมดสำหรับภาคผนวก</label></h3><dl><dt>ทำอย่างไร</dt><dd>ไฟล์อยู่ใน <code>task3_fpga_audio.zip</code> แล้ว (VHDL, sketch ESP32, Python) ไม่ต้องทำอะไรเพิ่ม</dd><dt>ต้องได้</dt><dd class="exp">—</dd></dl></div></div></section><section id="sc" aria-labelledby="h-sc"><header><span class="n">2</span><h2 id="h-sc">วัดด้วยออสซิลโลสโคป</h2><span class="cnt" data-cnt="sc"></span><span class="sub">ปากคีบ GND ของโพรบทุกเส้นที่ JP1 ขา 12 หรือ 30</span></header><div class="grp">ก · จังหวะ sampling ซึ่งสำคัญที่สุด</div><div class="item" id="it-sc1"><input type="checkbox" id="c-sc1" data-c="sc1"><div><h3><label for="c-sc1">(ก) จังหวะ sampling ที่ fs_tick</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>JP1 ขา 6</b> · Trigger CH1 rising · 50 µs/div · เปิด Measure: <b>Freq, Period, +Width</b> และ <b>Statistics</b> (min/max/std) · ถ่ายเพิ่มอีกรูปแบบ <b>infinite persistence</b> ทิ้งไว้ ~30 วินาที</dd><dt>ต้องได้</dt><dd class="exp">Freq <b>8.000 kHz</b> (ขานี้สลับทุก sample จึงเป็น Fs/2) · Period 125.00 µs · ขอบคมไม่บานใน persistence = jitter ต่ำ</dd></dl><div class="fields"><label for="v-f_tick">Freq<input id="v-f_tick" data-v="f_tick" data-label="(ก) จังหวะ sampling ที่ fs_tick · Freq" placeholder="kHz"></label><label for="v-p_tick">Period / std<input id="v-p_tick" data-v="p_tick" data-label="(ก) จังหวะ sampling ที่ fs_tick · Period / std" placeholder="µs / ns"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_fs_tick.png" data-cap="สี่เหลี่ยม 8 kHz ขอบคมใน persistence" aria-label="ขยายภาพ: สี่เหลี่ยม 8 kHz ขอบคมใน persistence"><img src="img/scope_fs_tick.png" alt="สี่เหลี่ยม 8 kHz ขอบคมใน persistence" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>สี่เหลี่ยม 8 kHz ขอบคมใน persistence</figcaption></figure></div></div><div class="item" id="it-sc2"><input type="checkbox" id="c-sc2" data-c="sc2"><div><h3><label for="c-sc2">(ก) จังหวะแปลงของ MCP3201</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>JP1 ขา 7</b> (ADC CS) · CH2 → <b>JP1 ขา 8</b> (ADC CLK) · Trigger CH1 falling · 3 µs/div</dd><dt>ต้องได้</dt><dd class="exp">CS ต่ำ ~21 µs มี CLK <b>16 ลูก</b> ที่ 800 kHz · CS เกิดซ้ำทุก <b>62.5 µs</b> (16.000 kHz) = sampling instant จริง</dd></dl><div class="fields"><label for="v-f_cs">CS Freq<input id="v-f_cs" data-v="f_cs" data-label="(ก) จังหวะแปลงของ MCP3201 · CS Freq" placeholder="kHz"></label><label for="v-f_aclk">CLK Freq<input id="v-f_aclk" data-v="f_aclk" data-label="(ก) จังหวะแปลงของ MCP3201 · CLK Freq" placeholder="kHz"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_mcp.png" data-cap="CS ของ ADC และ 16 clock ต่อการแปลง" aria-label="ขยายภาพ: CS ของ ADC และ 16 clock ต่อการแปลง"><img src="img/scope_mcp.png" alt="CS ของ ADC และ 16 clock ต่อการแปลง" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>CS ของ ADC และ 16 clock ต่อการแปลง</figcaption></figure></div></div><div class="item noimg" id="it-sc3"><input type="checkbox" id="c-sc3" data-c="sc3"><div><h3><label for="c-sc3">(ก) เทียบ jitter กับ Task 1 (GPIO5 ของ ESP32)</label><span class="opt">ไม่บังคับ</span></h3><dl><dt>ทำอย่างไร</dt><dd>ถ้ายังมีบอร์ด Task 1: วัดขา GPIO5 ด้วยวิธีเดียวกับข้อแรก (Freq, Statistics, persistence)</dd><dt>ต้องได้</dt><dd class="exp">std ของ ESP32 timer ระดับหลายสิบ ns ถึง µs ส่วน FPGA ต่ำกว่า 1 ns ใช้ตอบข้อ 8 ได้ตรง ๆ</dd></dl><div class="fields"><label for="v-std_t1">std Task 1<input id="v-std_t1" data-v="std_t1" data-label="(ก) เทียบ jitter กับ Task 1 (GPIO5 ของ ESP32) · std Task 1" placeholder="ns"></label></div></div></div><div class="grp">ข · หลักฐานตอบข้อ 6 ของโจทย์</div><div class="item" id="it-sc4"><input type="checkbox" id="c-sc4" data-c="sc4"><div><h3><label for="c-sc4">(ข) การส่งข้อมูลไม่รบกวน sampling</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>JP1 ขา 6</b> (fs_tick) · CH2 → <b>JP1 ขา 4</b> (SPI CS) · Trigger CH2 falling · 1 ms/div</dd><dt>ต้องได้</dt><dd class="exp">ระหว่างที่ CS ต่ำ (ESP32 กำลังอ่าน ~4 ms) CH1 ยังเป็นสี่เหลี่ยม 8 kHz สม่ำเสมอ ไม่มีช่องว่างหรือคาบยืด</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_transfer.png" data-cap="fs_tick เดินต่อตลอดช่วง CS ต่ำ" aria-label="ขยายภาพ: fs_tick เดินต่อตลอดช่วง CS ต่ำ"><img src="img/scope_transfer.png" alt="fs_tick เดินต่อตลอดช่วง CS ต่ำ" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>fs_tick เดินต่อตลอดช่วง CS ต่ำ</figcaption></figure></div></div><div class="grp">ค · บัสส่งข้อมูล</div><div class="item" id="it-sc5"><input type="checkbox" id="c-sc5" data-c="sc5"><div><h3><label for="c-sc5">(ค) บัส SPI: SCLK และ decode</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>JP1 ขา 1</b> (SCLK) · CH2 → <b>JP1 ขา 3</b> (MISO) · Trigger CH1 · 1 µs/div · เปิด SPI decode: CPOL 0, CPHA 0, MSB first, 8 บิต, CS = ขา 4 (ถ้ามีช่องที่ 3)</dd><dt>ต้องได้</dt><dd class="exp">SCLK <b>4.000 MHz</b> · 4 ไบต์แรกบน MISO = <code>C3 1x A5 5A</code> (C3 = ลายเซ็น, 1x = สถานะ, A55A = sync)</dd></dl><div class="fields"><label for="v-f_sclk">SCLK<input id="v-f_sclk" data-v="f_sclk" data-label="(ค) บัส SPI: SCLK และ decode · SCLK" placeholder="MHz"></label><label for="v-dec">ไบต์แรกที่ decode ได้<input id="v-dec" data-v="dec" data-label="(ค) บัส SPI: SCLK และ decode · ไบต์แรกที่ decode ได้" placeholder="C3 11 A5 5A"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_spi.png" data-cap="SCLK 4 MHz และข้อมูลบน MISO" aria-label="ขยายภาพ: SCLK 4 MHz และข้อมูลบน MISO"><img src="img/scope_spi.png" alt="SCLK 4 MHz และข้อมูลบน MISO" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>SCLK 4 MHz และข้อมูลบน MISO</figcaption></figure></div></div><div class="item noimg" id="it-sc6"><input type="checkbox" id="c-sc6" data-c="sc6"><div><h3><label for="c-sc6">(ค) เวลาส่ง 1 block</label></h3><dl><dt>ทำอย่างไร</dt><dd>ใช้ภาพเดียวกับข้อ (ข) วัด <b>−Width ของ CS</b> (ขา 4)</dd><dt>ต้องได้</dt><dd class="exp">ประมาณ <b>4.1–4.3 ms</b> (2060 ไบต์ × 8 ÷ 4 MHz = 4.12 ms) เทียบคาบ block 1024/16000 = <b>64 ms</b> ใช้เวลาแค่ ~7%</dd></dl><div class="fields"><label for="v-t_blk">เวลาส่ง 1 block<input id="v-t_blk" data-v="t_blk" data-label="(ค) เวลาส่ง 1 block · เวลาส่ง 1 block" placeholder="ms"></label></div></div></div><div class="item" id="it-sc7"><input type="checkbox" id="c-sc7" data-c="sc7"><div><h3><label for="c-sc7">(ค) สัญญาณ block-ready</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>JP1 ขา 13</b> (blk_tick) · CH2 → <b>JP1 ขา 5</b> (DRDY) · 20 ms/div</dd><dt>ต้องได้</dt><dd class="exp">DRDY ขึ้นทุก <b>64.00 ms</b> และตกเกือบทันที (~1 ms) เมื่อ ESP32 อ่านเสร็จ · blk_tick 7.8125 Hz</dd></dl><div class="fields"><label for="v-p_drdy">คาบ DRDY<input id="v-p_drdy" data-v="p_drdy" data-label="(ค) สัญญาณ block-ready · คาบ DRDY" placeholder="ms"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_drdy.png" data-cap="DRDY ทุก 64 ms" aria-label="ขยายภาพ: DRDY ทุก 64 ms"><img src="img/scope_drdy.png" alt="DRDY ทุก 64 ms" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>DRDY ทุก 64 ms</figcaption></figure></div></div><div class="grp">ง · ฝั่งสัญญาณแอนะล็อก</div><div class="item noimg" id="it-sc8"><input type="checkbox" id="c-sc8" data-c="sc8"><div><h3><label for="c-sc8">(ง) แรงดัน DC ของไมค์ตอนเงียบ</label></h3><dl><dt>ทำอย่างไร</dt><dd>CH1 → <b>MCP3201 ขา 2 (IN+)</b> · DC coupling · Measure <b>Vavg</b> ตอนห้องเงียบ</dd><dt>ต้องได้</dt><dd class="exp">ราว <b>1.65 V</b> (ครึ่งหนึ่งของ 3.3 V) ≈ 2048 counts</dd></dl><div class="fields"><label for="v-v_mic">Vavg เงียบ<input id="v-v_mic" data-v="v_mic" data-label="(ง) แรงดัน DC ของไมค์ตอนเงียบ · Vavg เงียบ" placeholder="V"></label></div></div></div><div class="item" id="it-sc9"><input type="checkbox" id="c-sc9" data-c="sc9"><div><h3><label for="c-sc9">(ง) Function generator ก่อนต่อเข้าวงจร</label></h3><dl><dt>ทำอย่างไร</dt><dd>ตั้ง Sine 1 kHz, 1.5 Vpp, offset 1.65 V, Load = High-Z · วัดที่ปลายสายก่อนเสียบ · Measure Freq, Vpp, Vavg, Vmax, Vmin</dd><dt>ต้องได้</dt><dd class="exp">Vmin ≈ 0.9 V (ไม่ติดลบ) · Vmax ≈ 2.4 V (ไม่เกิน 3.3 V)</dd></dl><div class="fields"><label for="v-gen">Vmax / Vmin<input id="v-gen" data-v="gen" data-label="(ง) Function generator ก่อนต่อเข้าวงจร · Vmax / Vmin" placeholder="V"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_gen.png" data-cap="ไซน์ 1 kHz อยู่ในช่วง 0.9–2.4 V" aria-label="ขยายภาพ: ไซน์ 1 kHz อยู่ในช่วง 0.9–2.4 V"><img src="img/scope_gen.png" alt="ไซน์ 1 kHz อยู่ในช่วง 0.9–2.4 V" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>ไซน์ 1 kHz อยู่ในช่วง 0.9–2.4 V</figcaption></figure></div></div><div class="item" id="it-sc10"><input type="checkbox" id="c-sc10" data-c="sc10"><div><h3><label for="c-sc10">(ง) FFT บนสโคป</label></h3><dl><dt>ทำอย่างไร</dt><dd>Math → FFT ของ CH1 (Hanning) สัญญาณเดียวกับข้อก่อน</dd><dt>ต้องได้</dt><dd class="exp">peak ที่ 1.000 kHz ไว้วางเทียบกับ FFT ในโปรแกรม</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/scope_fft.png" data-cap="FFT ของสโคป peak ที่ 1 kHz" aria-label="ขยายภาพ: FFT ของสโคป peak ที่ 1 kHz"><img src="img/scope_fft.png" alt="FFT ของสโคป peak ที่ 1 kHz" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>FFT ของสโคป peak ที่ 1 kHz</figcaption></figure></div></div></section><section id="ts" aria-labelledby="h-ts"><header><span class="n">3</span><h2 id="h-ts">ทดสอบในโปรแกรม (waveform + FFT + spectrogram)</h2><span class="cnt" data-cnt="ts"></span><span class="sub">ใช้ run_host.bat (Python) · กด Pause ก่อนถ่ายทุกรูป · ให้บรรทัดข้อความด้านบนติดมาด้วย</span></header><div class="item" id="it-ts0"><input type="checkbox" id="c-ts0" data-c="ts0"><div><h3><label for="c-ts0">Test ramp (เช็กลิงก์ก่อน)</label></h3><dl><dt>ทำอย่างไร</dt><dd>build แบบ <code>build.bat 2</code> แล้วกด <code>t</code> ในหน้าต่างกราฟ</dd><dt>ต้องได้</dt><dd class="exp">ข้อความ <b>TEST RAMP: OK</b> · spi_err = 0 · กด <code>n</code> กลับ</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_ramp.png" data-cap="ramp 0–1023" aria-label="ขยายภาพ: ramp 0–1023"><img src="img/host_ramp.png" alt="ramp 0–1023" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>ramp 0–1023</figcaption></figure></div></div><div class="item" id="it-ts1"><input type="checkbox" id="c-ts1" data-c="ts1"><div><h3><label for="c-ts1">Sine 1 kHz จาก generator</label></h3><dl><dt>ทำอย่างไร</dt><dd>1 kHz, 1.5 Vpp, offset 1.65 V · Window Hann</dd><dt>ต้องได้</dt><dd class="exp">1000 ÷ 15.625 = bin 64 พอดี · peak อ่านได้ <b>1000.0 Hz</b> · Fs_est ≈ 16000</dd></dl><div class="fields"><label for="v-pk1k">peak ที่อ่านได้<input id="v-pk1k" data-v="pk1k" data-label="Sine 1 kHz จาก generator · peak ที่อ่านได้" placeholder="Hz"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_1k.png" data-cap="peak เดียวคมที่ 1000 Hz" aria-label="ขยายภาพ: peak เดียวคมที่ 1000 Hz"><img src="img/host_1k.png" alt="peak เดียวคมที่ 1000 Hz" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>peak เดียวคมที่ 1000 Hz</figcaption></figure></div></div><div class="item" id="it-ts2"><input type="checkbox" id="c-ts2" data-c="ts2"><div><h3><label for="c-ts2">Sine 1100 Hz ไม่ตรง bin · Rect เทียบ Hann</label></h3><dl><dt>ทำอย่างไร</dt><dd>ตั้ง 1100 Hz (= bin 70.4) · ถ่าย 2 รูป: กดปุ่ม Window เป็น Rect แล้วเป็น Hann</dd><dt>ต้องได้</dt><dd class="exp">Rect: ฐาน peak กว้าง ไหลไปทั้งแกน (spectral leakage) · Hann: ฐานแคบลงชัด</dd></dl></div><div class="pics n2"><figure><button type="button" data-zoom="img/host_1100_rect.png" data-cap="Rect: leakage กว้าง" aria-label="ขยายภาพ: Rect: leakage กว้าง"><img src="img/host_1100_rect.png" alt="Rect: leakage กว้าง" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>Rect: leakage กว้าง</figcaption></figure><figure><button type="button" data-zoom="img/host_1100_hann.png" data-cap="Hann: leakage ลดลง" aria-label="ขยายภาพ: Hann: leakage ลดลง"><img src="img/host_1100_hann.png" alt="Hann: leakage ลดลง" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>Hann: leakage ลดลง</figcaption></figure></div></div><div class="item noimg" id="it-ts3"><input type="checkbox" id="c-ts3" data-c="ts3"><div><h3><label for="c-ts3">ไล่ความถี่ 500 Hz, 2 kHz, 5 kHz, 7.5 kHz</label></h3><dl><dt>ทำอย่างไร</dt><dd>เปลี่ยนความถี่ generator ทีละค่า จดค่า peak (ถ่ายรูปเฉพาะค่าที่อยากใส่รายงาน)</dd><dt>ต้องได้</dt><dd class="exp">ทุกค่าคลาดไม่เกิน ~1 Hz (มี interpolation)</dd></dl><div class="fields"><label for="v-sw500">500 Hz →<input id="v-sw500" data-v="sw500" data-label="ไล่ความถี่ 500 Hz, 2 kHz, 5 kHz, 7.5 kHz · 500 Hz →" placeholder="Hz"></label><label for="v-sw2k">2 kHz →<input id="v-sw2k" data-v="sw2k" data-label="ไล่ความถี่ 500 Hz, 2 kHz, 5 kHz, 7.5 kHz · 2 kHz →" placeholder="Hz"></label><label for="v-sw5k">5 kHz →<input id="v-sw5k" data-v="sw5k" data-label="ไล่ความถี่ 500 Hz, 2 kHz, 5 kHz, 7.5 kHz · 5 kHz →" placeholder="Hz"></label><label for="v-sw75">7.5 kHz →<input id="v-sw75" data-v="sw75" data-label="ไล่ความถี่ 500 Hz, 2 kHz, 5 kHz, 7.5 kHz · 7.5 kHz →" placeholder="Hz"></label></div></div></div><div class="item" id="it-ts4"><input type="checkbox" id="c-ts4" data-c="ts4"><div><h3><label for="c-ts4">Sine 9 kHz เกิน Nyquist</label></h3><dl><dt>ทำอย่างไร</dt><dd>ตั้ง 9 kHz (เกิน Fs/2 = 8 kHz)</dd><dt>ต้องได้</dt><dd class="exp">peak ไปโผล่ที่ |9000 − 16000| = <b>7000 Hz</b> = aliasing (ลองเพิ่ม 15 kHz → ไปโผล่ 1 kHz)</dd></dl><div class="fields"><label for="v-pk9k">peak ที่อ่านได้<input id="v-pk9k" data-v="pk9k" data-label="Sine 9 kHz เกิน Nyquist · peak ที่อ่านได้" placeholder="Hz"></label></div></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_9k_alias.png" data-cap="9 kHz ไปโผล่ที่ 7 kHz" aria-label="ขยายภาพ: 9 kHz ไปโผล่ที่ 7 kHz"><img src="img/host_9k_alias.png" alt="9 kHz ไปโผล่ที่ 7 kHz" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>9 kHz ไปโผล่ที่ 7 kHz</figcaption></figure></div></div><div class="item" id="it-ts5"><input type="checkbox" id="c-ts5" data-c="ts5"><div><h3><label for="c-ts5">Square 1 kHz</label></h3><dl><dt>ทำอย่างไร</dt><dd>เปลี่ยนรูปคลื่นเป็น Square 1 kHz 1.5 Vpp offset 1.65 V</dd><dt>ต้องได้</dt><dd class="exp">harmonic คี่ 1, 3, 5, 7 kHz ลดลงตาม 1/n · harmonic ที่เกิน 8 kHz (9, 11, 13 kHz…) พับกลับมาทับที่ 7, 5, 3 kHz</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_square.png" data-cap="harmonic คี่ของ square wave" aria-label="ขยายภาพ: harmonic คี่ของ square wave"><img src="img/host_square.png" alt="harmonic คี่ของ square wave" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>harmonic คี่ของ square wave</figcaption></figure></div></div><div class="item" id="it-ts6"><input type="checkbox" id="c-ts6" data-c="ts6"><div><h3><label for="c-ts6">สัญญาณ 2 โทน</label></h3><dl><dt>ทำอย่างไร</dt><dd>ถ้า generator มี 2 ช่อง รวมผ่านตัวต้านทาน 1 kΩ สองตัว · ถ้าไม่มี ใช้ test tone ของ FPGA (<code>build.bat 2</code>, SW6 + SW9 ขึ้น = 1 kHz + 3 kHz)</dd><dt>ต้องได้</dt><dd class="exp">2 peak แยกกันชัด ที่ 1 kHz และ 3 kHz</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_twotone.png" data-cap="1 kHz + 3 kHz" aria-label="ขยายภาพ: 1 kHz + 3 kHz"><img src="img/host_twotone.png" alt="1 kHz + 3 kHz" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>1 kHz + 3 kHz</figcaption></figure></div></div><div class="item" id="it-ts7"><input type="checkbox" id="c-ts7" data-c="ts7"><div><h3><label for="c-ts7">Clipping</label></h3><dl><dt>ทำอย่างไร</dt><dd>เพิ่ม Vpp ของ generator จนเกินช่วง 0–3.3 V (ห้ามเกิน 3.6 V และ ห้ามต่ำกว่า −0.3 V ที่ขา ADC · ตัวต้านทาน 1 kΩ ช่วยจำกัดกระแส) หรือพูดดังใกล้ไมค์</dd><dt>ต้องได้</dt><dd class="exp">ยอดแบนที่ 0 V / 3.3 V · LEDR3 ติด · clip% ขึ้น · มี harmonic ใหม่ใน FFT · เทียบกับ Task 1</dd></dl></div><div class="pics n1"><figure><button type="button" data-zoom="img/host_clip.png" data-cap="ยอดแบนและ harmonic ที่เกิดขึ้น" aria-label="ขยายภาพ: ยอดแบนและ harmonic ที่เกิดขึ้น"><img src="img/host_clip.png" alt="ยอดแบนและ harmonic ที่เกิดขึ้น" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>ยอดแบนและ harmonic ที่เกิดขึ้น</figcaption></figure></div></div><div class="item" id="it-ts8"><input type="checkbox" id="c-ts8" data-c="ts8"><div><h3><label for="c-ts8">เงียบ / พูด / ตบมือ / ผิวปาก ผ่านไมค์</label></h3><dl><dt>ทำอย่างไร</dt><dd>เงียบ: ถ่ายทันที · พูด: ลากเสียง “อาาา” · ตบมือ: ตั้ง <b>Trigger SINGLE + level + rise</b> แล้วตบ 1 ครั้ง ภาพหยุดเอง · ผิวปาก: เส้นเดียวใน spectrogram</dd><dt>ต้องได้</dt><dd class="exp">เงียบ: noise ต่ำ อาจมีหนาม 50 Hz · พูด: harmonic เป็นเส้นซ้อนห่างเท่ากัน · ตบมือ: เส้นตั้งกว้างทุกความถี่</dd></dl></div><div class="pics n3"><figure><button type="button" data-zoom="img/host_silence.png" data-cap="เงียบ" aria-label="ขยายภาพ: เงียบ"><img src="img/host_silence.png" alt="เงียบ" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>เงียบ</figcaption></figure><figure><button type="button" data-zoom="img/host_speech.png" data-cap="พูด (สระอา)" aria-label="ขยายภาพ: พูด (สระอา)"><img src="img/host_speech.png" alt="พูด (สระอา)" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>พูด (สระอา)</figcaption></figure><figure><button type="button" data-zoom="img/host_clap.png" data-cap="ตบมือ ที่ทริกเกอร์จับได้" aria-label="ขยายภาพ: ตบมือ ที่ทริกเกอร์จับได้"><img src="img/host_clap.png" alt="ตบมือ ที่ทริกเกอร์จับได้" loading="lazy"></button><figcaption><span class="tag">ตัวอย่าง</span>ตบมือ ที่ทริกเกอร์จับได้</figcaption></figure></div></div><div class="item noimg" id="it-ts9"><input type="checkbox" id="c-ts9" data-c="ts9"><div><h3><label for="c-ts9">รันยาวหลายนาที</label></h3><dl><dt>ทำอย่างไร</dt><dd><code>run_host.bat --check 300</code> (5 นาที) แล้วจับหน้าจอบรรทัดสุดท้าย</dd><dt>ต้องได้</dt><dd class="exp"><code>RESULT: Fs_est = 16000.xx … OK; lost blocks = 0</code> · spi_err = 0 · esp_drop = 0 · bad_usb = 0</dd></dl><div class="fields"><label for="v-long">จำนวน block / lost<input id="v-long" data-v="long" data-label="รันยาวหลายนาที · จำนวน block / lost" placeholder="เช่น 4688 / 0"></label><label for="v-errs">spi_err / esp_drop / bad_usb<input id="v-errs" data-v="errs" data-label="รันยาวหลายนาที · spi_err / esp_drop / bad_usb" placeholder="0 / 0 / 0"></label></div></div></div></section>
+<section id="nums" aria-labelledby="h-nums"><header><span class="n">4</span><h2 id="h-nums">ตัวเลขที่ต้องจด</h2><span class="sub">ค่าที่ออกแบบไว้อยู่คอลัมน์กลาง กรอกค่าที่วัดหรืออ่านได้จริงในคอลัมน์ขวา</span></header><div class="tw"><table><thead><tr><th>รายการ</th><th>ค่าที่ออกแบบ / คาดไว้</th><th>ค่าที่ได้</th></tr></thead><tbody><tr><td><b>F_s ที่ตั้งไว้</b></td><td class="foot">16 000 S/s</td><td><input id="v-n_fs" data-v="n_fs" data-label="F_s ที่ตั้งไว้" aria-label="F_s ที่ตั้งไว้" placeholder="ค่าที่ได้"></td></tr><tr><td><b>วิธีสร้างจาก 50 MHz</b></td><td class="foot">หาร 3125 (ตัวนับ 0–3124 ให้ tick 1 ครั้ง)</td><td><input id="v-n_div" data-v="n_div" data-label="วิธีสร้างจาก 50 MHz" aria-label="วิธีสร้างจาก 50 MHz" placeholder="ค่าที่ได้"></td></tr><tr><td><b>ความละเอียด ADC</b></td><td class="foot">12 บิต · 1 LSB = 3.3/4096 ≈ 0.81 mV</td><td><input id="v-n_bits" data-v="n_bits" data-label="ความละเอียด ADC" aria-label="ความละเอียด ADC" placeholder="ค่าที่ได้"></td></tr><tr><td><b>ค่าเฉลี่ยตอนเงียบ</b></td><td class="foot">≈ 2048 counts (กรอกค่าที่วัดได้)</td><td><input id="v-n_mean" data-v="n_mean" data-label="ค่าเฉลี่ยตอนเงียบ" aria-label="ค่าเฉลี่ยตอนเงียบ" placeholder="ค่าที่ได้"></td></tr><tr><td><b>SCLK FPGA ↔ ESP32</b></td><td class="foot">4 MHz (ADC CLK 800 kHz)</td><td><input id="v-n_sclk" data-v="n_sclk" data-label="SCLK FPGA ↔ ESP32" aria-label="SCLK FPGA ↔ ESP32" placeholder="ค่าที่ได้"></td></tr><tr><td><b>เวลาส่ง 1 block</b></td><td class="foot">≈ 4.1–4.3 ms จากคาบ 64 ms</td><td><input id="v-n_tblk" data-v="n_tblk" data-label="เวลาส่ง 1 block" aria-label="เวลาส่ง 1 block" placeholder="ค่าที่ได้"></td></tr><tr><td><b>Baud ESP32 → PC</b></td><td class="foot">921 600</td><td><input id="v-n_baud" data-v="n_baud" data-label="Baud ESP32 → PC" aria-label="Baud ESP32 → PC" placeholder="ค่าที่ได้"></td></tr><tr><td><b>จำนวน block ที่รัน / lost / bad</b></td><td class="foot">กรอกจากข้อ 3 รันยาว</td><td><input id="v-n_cnt" data-v="n_cnt" data-label="จำนวน block ที่รัน / lost / bad" aria-label="จำนวน block ที่รัน / lost / bad" placeholder="ค่าที่ได้"></td></tr></tbody></table></div></section>
+
+<section id="warn" aria-labelledby="h-warn"><header><span class="n">5</span><h2 id="h-warn">ข้อควรระวังก่อนวัด</h2></header>
+<div class="warns">
+  <div><b>ช่วงแรงดันเข้า ADC:</b> MCP3201 รับ 0–3.3 V (เท่า VREF) ต่อ generator ต้อง offset 1.65 V, ไม่เกิน 2 Vpp, Load = High-Z และวัดก่อนเสียบทุกครั้ง ห้ามติดลบ</div>
+  <div><b>ห้ามแตะ JP1 ขา 11 (5 V)</b> ด้วยโพรบหรือสาย ถ้าโพรบลื่นไปชนขาข้าง ๆ อาจลัดวงจรได้ ใช้ปากคีบหรือสายจัมเปอร์ต่อออกมาวัดจะปลอดภัยกว่า</div>
+  <div><b>Logic level:</b> ESP32-S3 และ GPIO ของ DE10-Lite เป็น 3.3 V ทั้งคู่ ต่อตรงได้ แต่ต้องมี GND ร่วมเสมอ และห้ามต่อไฟเลี้ยงข้ามบอร์ด</div>
+  <div><b>ถ้าลองโหมด MAX 10 ADC:</b> ขา A0–A5 ผ่าน op-amp และตัวแบ่งแรงดัน 0–5 V → 0–2.5 V ไมค์ 3.3 V จะใช้ช่วงได้ราวครึ่งเดียว (bias ~1.65 V) จ่ายไมค์ 5 V ได้ช่วงเต็มกว่า (bias ~2.5 V)</div>
+</div></section>
+
+<p class="foot">ต่อสายตาม Task 3 Wiring Manual ก่อนเริ่มข้อ 2–3</p>
+</main>
+<dialog id="zoom" aria-label="ภาพขยาย"><img id="zimg" alt=""><p id="zcap"></p></dialog>
+<script>
+(function(){
+  var KEY='task3-checklist-v1', st={c:{},v:{}};
+  try{ var raw=localStorage.getItem(KEY); if(raw){ st=JSON.parse(raw)||st; st.c=st.c||{}; st.v=st.v||{}; } }catch(e){}
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+  var boxes=[].slice.call(document.querySelectorAll('input[data-c]'));
+  var vals=[].slice.call(document.querySelectorAll('input[data-v]'));
+  function refresh(){
+    var req=0, reqDone=0;
+    boxes.forEach(function(b){
+      var it=b.closest('.item'); it.classList.toggle('done', b.checked);
+      var opt=!!it.querySelector('.opt'); if(!opt){ req++; if(b.checked) reqDone++; }
+    });
+    document.getElementById('pc').textContent=reqDone+' / '+req;
+    document.getElementById('pf').style.width=(req? reqDone*100/req:0)+'%';
+    document.querySelectorAll('[data-cnt]').forEach(function(el){
+      var s=document.getElementById(el.getAttribute('data-cnt'));
+      var bs=s.querySelectorAll('input[data-c]'), d=0; bs.forEach(function(b){ if(b.checked) d++; });
+      el.textContent=d+'/'+bs.length;
+    });
+  }
+  boxes.forEach(function(b){ var id=b.getAttribute('data-c'); b.checked=!!st.c[id];
+    b.addEventListener('change',function(){ st.c[id]=b.checked; save(); refresh(); }); });
+  vals.forEach(function(i){ var id=i.getAttribute('data-v'); if(st.v[id]) i.value=st.v[id];
+    i.addEventListener('input',function(){ st.v[id]=i.value; save(); }); });
+  refresh();
+
+  var dlg=document.getElementById('zoom'), zi=document.getElementById('zimg'), zc=document.getElementById('zcap');
+  document.querySelectorAll('[data-zoom]').forEach(function(b){
+    b.addEventListener('click',function(){ zi.src=b.getAttribute('data-zoom'); zi.alt=b.getAttribute('data-cap');
+      zc.textContent='ตัวอย่างจำลอง · '+b.getAttribute('data-cap')+' · คลิกหรือกด Esc เพื่อปิด';
+      if(dlg.showModal) dlg.showModal(); });
+  });
+  dlg.addEventListener('click',function(){ dlg.close(); });
+
+  document.getElementById('copy').addEventListener('click',function(){
+    var lines=['Task 3 checklist'];
+    boxes.forEach(function(b){ var it=b.closest('.item');
+      lines.push((b.checked?'[x] ':'[ ] ')+it.querySelector('h3 label').textContent); });
+    lines.push(''); lines.push('ค่าที่จด:');
+    vals.forEach(function(i){ if(i.value) lines.push('- '+i.getAttribute('data-label')+': '+i.value); });
+    var txt=lines.join('\n'), out=document.getElementById('out');
+    out.value=txt; out.style.display='block';
+    var msg=document.getElementById('copymsg');
+    try{ navigator.clipboard.writeText(txt).then(function(){ msg.textContent='คัดลอกแล้ว วางในแชทได้เลย'; },
+      function(){ out.select(); msg.textContent='คัดลอกอัตโนมัติไม่ได้ ให้คัดลอกจากกล่องด้านล่าง'; }); }
+    catch(e){ out.select(); msg.textContent='คัดลอกอัตโนมัติไม่ได้ ให้คัดลอกจากกล่องด้านล่าง'; }
+  });
+  document.getElementById('reset').addEventListener('click',function(){
+    var r=document.getElementById('resetc'); if(r.hidden){ r.hidden=false; return; } });
+  document.getElementById('resetyes').addEventListener('click',function(){
+    st={c:{},v:{}}; save(); boxes.forEach(function(b){b.checked=false;}); vals.forEach(function(i){i.value='';});
+    document.getElementById('resetc').hidden=true; refresh(); });
+  document.getElementById('resetno').addEventListener('click',function(){ document.getElementById('resetc').hidden=true; });
+})();
+</script>
+</body>
+</html>

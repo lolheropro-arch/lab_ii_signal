@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+mini_project/songs/*
+!mini_project/songs/PUT_SONGS_HERE.txt
+# Quartus build outputs
+db/
+incremental_db/
+output_files/
+*.qws

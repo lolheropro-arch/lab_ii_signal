@@ -1,0 +1,5 @@
+numpy
+scipy
+matplotlib
+librosa        # อ่านไฟล์เพลง mp3/wav/flac/ogg
+pyserial       # รับข้อมูลจาก ESP32
