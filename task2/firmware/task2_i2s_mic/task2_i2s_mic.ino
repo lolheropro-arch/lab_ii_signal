@@ -12,7 +12,7 @@
  *       แปลงจาก 24 บิต (อยู่ในคำ 32 บิต) เป็น int16 แล้วเก็บลง ping-pong buffer
  *    4) loop() ส่ง block ที่เต็มแล้วออก serial เป็น binary frame  (เหมือน Task 1)
  *
- *  ใช้สคริปต์ MATLAB ตัวเดียวกับ Task 1 ได้เลย (realtime_audio_scope.m)
+ *  ใช้สคริปต์ MATLAB ตัวเดียวกับ Task 1 ได้เลย (matlab/realtime_audio_scope.m)
  *  frame บอก fs = 16000, format = 1 (int16), bits = 16  MATLAB ปรับตามเอง
  *  ฝั่ง MATLAB ให้ดูแกน FFT เป็น dBFS และ waveform เป็น counts
  *  (หน่วย dBV / V ไม่มีความหมายกับไมค์ digital)

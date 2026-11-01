@@ -2,7 +2,7 @@ function realtime_audio_scope(varargin)
 % REALTIME_AUDIO_SCOPE  แสดง waveform / FFT / spectrogram แบบ real-time
 %                       จาก sample block ที่ ESP32 ส่งมาทาง serial
 %
-%   ใช้ได้กับ Task 1, 2 และ 3 ตราบใดที่ ESP32 ส่ง frame รูปแบบเดียวกับ
+%   ใช้ร่วมกันทั้ง Task 1 (ADC + MAX4466) และ Task 2 (I2S + INMP441) เพราะส่ง frame รูปแบบเดียวกับ
 %   task1_adc_mic.ino (ค่า Fs, N, ชนิด sample อ่านจาก header ของ frame เอง
 %   จึงไม่ต้องแก้สคริปต์นี้เมื่อเปลี่ยน sampling rate หรือขนาด block)
 %
