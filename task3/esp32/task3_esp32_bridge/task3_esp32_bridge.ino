@@ -69,7 +69,7 @@ static const int      PIN_CS       = 5;
 static const int      PIN_DRDY     = 4;
 #endif
 
-static const uint32_t SPI_HZ       = 4000000;   // 1..8 MHz (jumper wires: <= 4 MHz)
+static const uint32_t SPI_HZ       = 1000000;   // 1..8 MHz (jumper wires: <= 4 MHz)
 static const uint32_t SERIAL_BAUD  = 921600;    // 921600 or 2000000 (must match host)
 static const uint16_t N            = 1024;      // must match FPGA ADDR_W (2^10)
 static const uint16_t FS_NOMINAL   = 16000;
@@ -102,6 +102,9 @@ static uint8_t        frame[FRAME_BYTES];
 static volatile uint8_t  readCmd   = CMD_READ_BLOCK;
 static volatile uint16_t spiErrs   = 0;
 static volatile uint16_t espDrops  = 0;
+static volatile uint8_t  lastStatus = 0;
+static volatile uint32_t spiReads   = 0;
+static uint8_t           lastHead[12];
 
 // --------------------------------------------------------------- DRDY ISR
 void IRAM_ATTR onDrdy() {
@@ -128,6 +131,15 @@ static bool readFpgaBlock(uint8_t cmd, Block *b) {
   delayMicroseconds(1);
   digitalWrite(PIN_CS, HIGH);        // FPGA releases the bank on this edge
   SPI.endTransaction();
+  lastStatus = spiRx[0];
+  spiReads++;
+  memcpy(lastHead, spiRx, sizeof(lastHead));
+  // Link delivers the stream 1 bit early (0xC3 reads as 0x86): realign it.
+  if (spiRx[0] == 0x86) {
+    for (size_t i = SPI_BYTES - 1; i > 0; i--)
+      spiRx[i] = (spiRx[i] >> 1) | (spiRx[i - 1] << 7);
+    spiRx[0] = (spiRx[0] >> 1) | 0x80;
+  }
 
   // ---- validate
   if (spiRx[0] != 0xC3)                 return false;   // MISO not connected?
@@ -209,8 +221,19 @@ void loop() {
     if (c == 'n') readCmd = CMD_READ_BLOCK;
   }
 
+  static uint32_t lastActivity = 0;
   int idx;
-  if (xQueueReceive(fullQ, &idx, pdMS_TO_TICKS(50)) != pdTRUE) return;
+  if (xQueueReceive(fullQ, &idx, pdMS_TO_TICKS(50)) != pdTRUE) {
+    if (millis() - lastActivity >= 1000) {   // no valid frame for 1 s: report link state
+      lastActivity = millis();
+      Serial.printf("#ESP32 alive: no frames drdy=%d status=0x%02X spi_reads=%lu spi_err=%u\n",
+                    digitalRead(PIN_DRDY), lastStatus, (unsigned long)spiReads, spiErrs);
+      Serial.print("#ESP32 head:");
+      for (size_t i = 0; i < sizeof(lastHead); i++) Serial.printf(" %02X", lastHead[i]);
+      Serial.println();
+    }
+    return;
+  }
   Block *b = &pool[idx];
 
   frame[0] = 0xAA; frame[1] = 0x55; frame[2] = 0x33; frame[3] = 0xCC;
@@ -228,4 +251,5 @@ void loop() {
 
   xQueueSend(freeQ, &idx, 0);         // buffer copied into 'frame' -> recycle
   Serial.write(frame, FRAME_BYTES);   // 2070 bytes / 64 ms = 32 kB/s
+  lastActivity = millis();
 }
