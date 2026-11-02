@@ -22,14 +22,16 @@ AUDIO_EXTENSIONS = (".mp3", ".wav", ".flac", ".ogg", ".m4a")
 # Windows ใช้ "COM3", "COM4", ...   Linux ใช้ "/dev/ttyUSB0" หรือ "/dev/ttyACM0"
 # (ใน GUI เลือกพอร์ตใหม่ได้ ค่านี้เป็นแค่ค่าเริ่มต้น)
 SERIAL_PORT = "COM3" if sys.platform.startswith("win") else "/dev/ttyUSB0"
-BAUD_RATE = 2_000_000
-SERIAL_TIMEOUT = 2.0         # วินาที — ถ้าไม่มีข้อมูลเข้านานกว่านี้จะแจ้ง error
+BAUD_RATE = 921_600
+SERIAL_TIMEOUT = 2.0         # วินาที — ถ้าไม่ได้ frame ที่ถูกต้องนานกว่านี้จะแจ้ง error
 
+# รูปแบบ frame ของ Task 3 (task3_esp32_bridge.ino)
 INPUT_FS = 16000             # sample rate ที่บอร์ดส่งมา (S/s)
 BLOCK_SIZE = 1024            # จำนวน sample ต่อหนึ่งบล็อก
-SYNC_BYTES = b"\xAA\x55"     # header หน้าทุกบล็อก (ตั้งเป็น b"" ถ้า sketch ไม่ส่ง header)
-SAMPLE_DTYPE = "<i2"         # "<i2" = int16 little-endian (I2S/INMP441)
-                             # "<u2" = uint16 little-endian (ADC 12-bit ของ ESP32/MAX10)
+SYNC_BYTES = b"\xAA\x55\x33\xCC"  # 4 ไบต์แรกของทุก frame
+FRAME_HEADER_BYTES = 20      # ความยาว header รวม sync (ตามด้วย sample และ checksum 2 ไบต์)
+SAMPLE_DTYPE = "<u2"         # uint16 little-endian (ค่า ADC 12-bit)
+FLAG_TEST_RAMP = 0x02        # บิตใน flags: FPGA กำลังส่งสัญญาณ ramp ทดสอบ ไม่ใช่เสียงจากไมค์
 
 # ---------------------------------------------------------------------
 # 3) การอัดเสียงเพื่อค้นหา

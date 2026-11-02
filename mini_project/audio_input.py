@@ -4,11 +4,14 @@ audio_input.py — แหล่งรับเสียง 2 แบบ (ทุ�
 1. record_serial()  : ไมค์ → FPGA → ESP32 → USB-Serial (ใช้งานจริง)
 2. load_test_clip() : ตัดช่วงหนึ่งจากไฟล์เพลง + ใส่ noise (ทดสอบอัลกอริทึมโดยไม่ต้องต่อบอร์ด)
 
-รูปแบบข้อมูลที่ ESP32 ต้องส่ง (ตั้งค่าใน config.py)
-    [SYNC_BYTES][BLOCK_SIZE samples แบบ binary][SYNC_BYTES][BLOCK_SIZE samples]...
-    ค่าเริ่มต้น:  AA 55  ตามด้วย 1024 × int16 little-endian
+รูปแบบ frame ของ Task 3 (ตั้งค่าใน config.py)  ยาว 2070 ไบต์
+    offset 0   sync  AA 55 33 CC
+    offset 4   seq (uint16)   offset 6   n (uint16)   offset 8   flags (uint8)
+    offset 20  1024 × uint16 little-endian
+    offset 2068  checksum = ผลรวม sample mod 2^16
 """
 import random
+import struct
 import time
 
 import numpy as np
@@ -28,40 +31,65 @@ def list_serial_ports():
         return []
 
 
-def _wait_for_sync(ser, deadline):
-    """อ่านทีละไบต์จนเจอ SYNC_BYTES (ใช้หาจุดเริ่มบล็อก)"""
+def _read_frames(ser):
+    """คืน (seq, flags, samples) ทีละ frame: หา SYNC_BYTES ใหม่เองและข้าม frame ที่ checksum ไม่ผ่าน"""
     sync = C.SYNC_BYTES
-    window = b""
-    while time.time() < deadline:
-        b = ser.read(1)
-        if not b:
-            continue
-        window = (window + b)[-len(sync):]
-        if window == sync:
-            return
-    raise TimeoutError("ไม่พบ header ของบล็อก — ตรวจ SYNC_BYTES / baud rate / ว่าบอร์ดกำลังส่งข้อมูล")
+    dtype = np.dtype(C.SAMPLE_DTYPE)
+    checksum_at = C.FRAME_HEADER_BYTES + C.BLOCK_SIZE * dtype.itemsize
+    frame_bytes = checksum_at + 2
+    buf = bytearray()
+    deadline = time.time() + C.SERIAL_TIMEOUT
+
+    while True:
+        if time.time() > deadline:
+            raise TimeoutError("ไม่ได้รับ frame ที่ถูกต้อง — ตรวจ baud rate / ว่าบอร์ดกำลังส่งข้อมูล / ปิดโปรแกรมอื่นที่เปิดพอร์ต")
+        buf += ser.read(max(1, ser.in_waiting))
+        while True:
+            i = buf.find(sync)
+            if i < 0:
+                del buf[:-(len(sync) - 1)]     # เก็บท้ายไว้ เผื่อ sync ถูกตัดคร่อมการอ่าน
+                break
+            del buf[:i]
+            if len(buf) < frame_bytes:
+                break
+            seq, n, flags = struct.unpack_from("<HHB", buf, len(sync))
+            samples = np.frombuffer(buf, dtype, C.BLOCK_SIZE, C.FRAME_HEADER_BYTES).copy()
+            checksum = struct.unpack_from("<H", buf, checksum_at)[0]
+            if n != C.BLOCK_SIZE or int(samples.sum()) & 0xFFFF != checksum:
+                del buf[:len(sync)]            # frame เสีย: หา sync ถัดไป
+                continue
+            del buf[:frame_bytes]
+            deadline = time.time() + C.SERIAL_TIMEOUT
+            yield seq, flags, samples
 
 
 def record_serial(seconds, port=C.SERIAL_PORT, baud=C.BAUD_RATE, progress=None):
     import serial
 
-    dtype = np.dtype(C.SAMPLE_DTYPE)
     n_needed = int(seconds * C.INPUT_FS)
     n_blocks = int(np.ceil(n_needed / C.BLOCK_SIZE))
-    block_bytes = C.BLOCK_SIZE * dtype.itemsize
     blocks = []
+    last_seq = None
 
-    with serial.Serial(port, baud, timeout=C.SERIAL_TIMEOUT) as ser:
+    ser = serial.Serial()
+    ser.port, ser.baudrate, ser.timeout = port, baud, C.SERIAL_TIMEOUT
+    ser.dtr, ser.rts = False, False            # ไม่ให้การเปิดพอร์ต reset ESP32
+    with ser:
         ser.reset_input_buffer()               # ทิ้งข้อมูลเก่าที่ค้างใน buffer
-        while len(blocks) < n_blocks:
-            if C.SYNC_BYTES:
-                _wait_for_sync(ser, time.time() + C.SERIAL_TIMEOUT)
-            data = ser.read(block_bytes)
-            if len(data) < block_bytes:
-                raise TimeoutError("ได้ข้อมูลไม่ครบบล็อก — ตรวจ BLOCK_SIZE / SAMPLE_DTYPE ใน config.py")
-            blocks.append(np.frombuffer(data, dtype=dtype))
+        for seq, flags, samples in _read_frames(ser):
+            if flags & C.FLAG_TEST_RAMP:
+                raise ValueError("FPGA กำลังส่ง test ramp ไม่ใช่เสียงจากไมค์ — ปิดสวิตช์ทดสอบบนบอร์ด")
+            if last_seq is not None:
+                # บล็อกที่หายเติมด้วยค่า DC เพื่อไม่ให้เวลาเลื่อน (fingerprint อาศัยระยะห่างตามเวลา)
+                lost = ((seq - last_seq) & 0xFFFF) - 1
+                lost = min(lost, n_blocks - len(blocks))
+                blocks.extend([np.full(C.BLOCK_SIZE, blocks[-1].mean())] * lost)
+            blocks.append(samples)
+            last_seq = seq
             if progress:
-                progress(len(blocks) / n_blocks)
+                progress(min(len(blocks) / n_blocks, 1.0))
+            if len(blocks) >= n_blocks:
+                break
 
     samples = np.concatenate(blocks)[:n_needed].astype(np.float64)
     return samples, C.INPUT_FS

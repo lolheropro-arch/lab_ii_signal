@@ -55,33 +55,29 @@ pip install -r requirements.txt
 
 ---
 
-## รูปแบบข้อมูลที่ ESP32 ต้องส่ง
+## รูปแบบข้อมูลจาก ESP32
 
-ส่งเป็น **binary** ต่อเนื่องเป็นบล็อก แต่ละบล็อกมี header นำหน้า:
+ใช้ frame ของ Task 3 (`task3_esp32_bridge.ino`) โดย **ไม่ต้องแก้ FPGA หรือ sketch** แต่ละ frame ยาว 2070 ไบต์:
 
 ```
-[0xAA 0x55][sample 0][sample 1] ... [sample 1023][0xAA 0x55][sample 0] ...
-             int16 little-endian (2 ไบต์ต่อ sample)
+offset 0     sync  AA 55 33 CC
+offset 4     seq (uint16)    offset 6  n (uint16)    offset 8  flags (uint8)
+offset 20    sample 1024 ตัว แบบ uint16 little-endian (ค่า ADC 12-bit)
+offset 2068  checksum = ผลรวม sample mod 2^16
 ```
 
-ฝั่ง Arduino ทำได้ง่าย ๆ เมื่อบล็อกเต็ม:
-```cpp
-const uint8_t SYNC[2] = {0xAA, 0x55};
-Serial.write(SYNC, 2);
-Serial.write((uint8_t*)block, 1024 * sizeof(int16_t));
-```
+Frame ที่ checksum ไม่ผ่านจะถูกข้าม และบล็อกที่หายจะเติมด้วยค่า DC ตามเลข `seq` เพื่อไม่ให้เวลาเลื่อน
 
-ถ้า sketch เดิมส่งรูปแบบอื่น **ไม่ต้องแก้ sketch** ให้แก้ใน `config.py` แทน:
+ค่าที่เกี่ยวข้องใน `config.py`:
 
 | ค่า | ความหมาย |
 |---|---|
-| `INPUT_FS` | sample rate ที่บอร์ดส่งมา (16000 สำหรับ INMP441, 10000 สำหรับ Task 1, 8000 ถ้า FPGA decimate แล้ว) |
-| `BLOCK_SIZE` | จำนวน sample ต่อบล็อก |
-| `SYNC_BYTES` | header (`b""` ถ้าไม่มี) |
-| `SAMPLE_DTYPE` | `"<i2"` = int16, `"<u2"` = uint16 (ADC 12-bit) — DC offset จะถูกลบให้อัตโนมัติ |
-| `BAUD_RATE` | ต้องตรงกับ `Serial.begin()` |
-
-> ⚠️ อัตรา 16 kS/s × 2 ไบต์ = 32 kB/s ต้องใช้ baud ≥ 460800 (แนะนำ 921600 หรือ 2 Mbaud)
+| `INPUT_FS` | sample rate ที่บอร์ดส่งมา (16000) — DC offset จะถูกลบให้อัตโนมัติ |
+| `BLOCK_SIZE` | จำนวน sample ต่อบล็อก (1024) |
+| `SYNC_BYTES` | 4 ไบต์แรกของทุก frame |
+| `FRAME_HEADER_BYTES` | ความยาว header รวม sync (20) |
+| `SAMPLE_DTYPE` | `"<u2"` = uint16 |
+| `BAUD_RATE` | ต้องตรงกับ `Serial.begin()` (921600) |
 
 ---
 
@@ -118,7 +114,7 @@ python experiment.py --negatives other_songs/                # ทดสอบ�
 
 | ปัญหา | สาเหตุ / วิธีแก้ |
 |---|---|
-| `ไม่พบ header ของบล็อก` | baud rate ไม่ตรง, `SYNC_BYTES` ไม่ตรงกับ sketch, หรือ Serial Monitor ของ Arduino IDE เปิดค้างอยู่ (ต้องปิด) |
+| `ไม่ได้รับ frame ที่ถูกต้อง` | baud rate ไม่ตรง, `SYNC_BYTES` ไม่ตรงกับ sketch, หรือ Serial Monitor ของ Arduino IDE เปิดค้างอยู่ (ต้องปิด) |
 | `Permission denied: /dev/ttyUSB0` (Linux) | `sudo usermod -a -G dialout $USER` แล้ว logout/login |
 | Waveform มีแต่สัญญาณรบกวน / เสียงเพี้ยน | `SAMPLE_DTYPE` หรือ `INPUT_FS` ไม่ตรงกับที่บอร์ดส่ง |
 | Waveform แบนติดขอบ | เสียงดังเกิน → ลด gain ไมค์ หรือลดเสียงลำโพง |
