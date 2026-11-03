@@ -36,6 +36,8 @@ class MiniShazamApp:
         self.db = FingerprintDB()
         self.jobs = queue.Queue()      # ข้อความจาก worker thread → GUI
         self.busy = False
+        self.last_audio = None         # (samples, fs) เสียงดิบล่าสุด ไว้เล่นซ้ำ
+        self.player = None
 
         self._build_left_panel()
         self._build_plot_panel()
@@ -47,14 +49,16 @@ class MiniShazamApp:
     # ส่วนหน้าตา
     # =================================================================
     def _build_left_panel(self):
-        left = ttk.Frame(self.root, padding=10)
-        left.pack(side=tk.LEFT, fill=tk.Y)
+        left = self._build_scrollable_left()
 
         # --- ฐานข้อมูลเพลง ---
         box = ttk.LabelFrame(left, text="ฐานข้อมูลเพลง", padding=8)
         box.pack(fill=tk.X)
         self.song_list = tk.Listbox(box, height=7, width=42)
         self.song_list.pack(fill=tk.X)
+        song_xbar = ttk.Scrollbar(box, orient=tk.HORIZONTAL, command=self.song_list.xview)
+        song_xbar.pack(fill=tk.X)
+        self.song_list.configure(xscrollcommand=song_xbar.set)
         self.db_info = ttk.Label(box, text="")
         self.db_info.pack(anchor="w", pady=(4, 4))
         ttk.Button(box, text="เพิ่มเพลงทั้งหมดในโฟลเดอร์ songs/",
@@ -93,10 +97,16 @@ class MiniShazamApp:
         ttk.Label(row, text="Noise SNR (dB)").pack(side=tk.LEFT, padx=(8, 0))
         self.snr = tk.StringVar(value="")       # ว่าง = ไม่ใส่ noise (ใช้กับโหมดไฟล์เท่านั้น)
         ttk.Entry(row, width=5, textvariable=self.snr).pack(side=tk.LEFT, padx=4)
+        self.denoise = tk.BooleanVar(value=False)
+        ttk.Checkbutton(box, text="ลดเสียงพื้นหลัง (ทั้งตอนเล่นและตอนค้นหา)",
+                        variable=self.denoise).pack(anchor="w", pady=(6, 0))
 
         # --- ปุ่มหลัก + ผลลัพธ์ ---
         self.listen_btn = ttk.Button(left, text="🎤  ฟังและค้นหาเพลง", command=self.listen)
         self.listen_btn.pack(fill=tk.X, ipady=6, pady=(4, 4))
+        self.play_btn = ttk.Button(left, text="🔊  เล่นเสียงที่อัด", command=self.toggle_playback,
+                                   state="disabled")
+        self.play_btn.pack(fill=tk.X, ipady=2, pady=(0, 4))
         self.progress = ttk.Progressbar(left, maximum=1.0)
         self.progress.pack(fill=tk.X)
         self.status = ttk.Label(left, text="พร้อม", foreground="gray")
@@ -109,6 +119,36 @@ class MiniShazamApp:
         self.result_title.pack(anchor="w")
         self.result_detail = ttk.Label(box, text="", justify=tk.LEFT, wraplength=390)
         self.result_detail.pack(anchor="w", pady=(6, 0))
+
+    def _build_scrollable_left(self):
+        """แผงซ้ายอยู่ใน Canvas พร้อม scrollbar แนวตั้ง เผื่อเนื้อหายาวเกินจอ"""
+        outer = ttk.Frame(self.root)
+        outer.pack(side=tk.LEFT, fill=tk.Y)
+        bg = ttk.Style().lookup("TFrame", "background")
+        canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0, background=bg)
+        bar = ttk.Scrollbar(outer, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=bar.set)
+        bar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.pack(side=tk.LEFT, fill=tk.Y, expand=True)
+
+        left = ttk.Frame(canvas, padding=10)
+        canvas.create_window((0, 0), window=left, anchor="nw")
+        left.bind("<Configure>", lambda e: canvas.configure(
+            scrollregion=canvas.bbox("all"), width=left.winfo_reqwidth()))
+        self.left_canvas = canvas
+
+        def on_wheel(event):
+            # ล้อเมาส์เลื่อนเฉพาะแผงซ้าย และไม่แย่งการเลื่อนของรายการเพลง
+            if not str(event.widget).startswith(str(left)) or event.widget is self.song_list:
+                return
+            if canvas.yview() == (0.0, 1.0):
+                return
+            up = event.num == 4 or getattr(event, "delta", 0) > 0
+            canvas.yview_scroll(-1 if up else 1, "units")
+
+        for seq in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+            self.root.bind_all(seq, on_wheel, add="+")
+        return left
 
     def _build_plot_panel(self):
         self.fig = Figure(figsize=(8, 7), dpi=100)
@@ -188,6 +228,22 @@ class MiniShazamApp:
                 return
         self._run_in_background(self._listen_job, source, test_file)
 
+    def toggle_playback(self):
+        """กดครั้งแรกเล่นเสียงที่อัดล่าสุด กดอีกครั้งหยุด (ใช้เสียงตามสถานะช่องลดเสียงตอนกด)"""
+        if self.player is not None:
+            audio_input.stop_audio(self.player)
+            return
+        samples, fs = self.last_audio
+        if self.denoise.get():
+            samples = audio_input.reduce_noise(samples, fs)
+        try:
+            self.player = audio_input.play_audio(samples, fs)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return
+        if self.player is not None:
+            self.play_btn.config(text="⏹  หยุดเล่น")
+
     def _listen_job(self, source, test_file):
         seconds = int(self.seconds.get())
         progress = lambda p: self.jobs.put(("progress", p))
@@ -201,10 +257,14 @@ class MiniShazamApp:
             snr = float(self.snr.get()) if self.snr.get().strip() else None
             samples, fs, start = audio_input.load_test_clip(test_file, seconds, snr_db=snr)
             extra = f"\n(เฉลย: ตัดจากวินาทีที่ {start:.1f}" + (f", SNR {snr:g} dB)" if snr is not None else ")")
+        self.jobs.put(("recorded", (samples, fs)))
 
         # 2) fingerprint + ค้นหา
         self.jobs.put(("status", "กำลังค้นหา..."))
         t0 = time.time()
+        if self.denoise.get():
+            samples = audio_input.reduce_noise(samples, fs)
+            extra += "\n(ลดเสียงพื้นหลังก่อนค้นหา)"
         query = fp.fingerprint(samples, fs)
         result = self.db.match(query["hashes"])
         result["elapsed"] = time.time() - t0
@@ -290,6 +350,9 @@ class MiniShazamApp:
                 elif kind == "songs_changed":
                     self.refresh_song_list()
                     self.status.config(text=data)
+                elif kind == "recorded":
+                    self.last_audio = data
+                    self.play_btn.state(["!disabled"])
                 elif kind == "result":
                     self._show_result(*data)
                     self.status.config(text="เสร็จ")
@@ -301,6 +364,9 @@ class MiniShazamApp:
                     self.listen_btn.state(["!disabled"])
         except queue.Empty:
             pass
+        if self.player is not None and self.player.poll() is not None:
+            self.player = None
+            self.play_btn.config(text="🔊  เล่นเสียงที่อัด")
         self.root.after(100, self._poll_jobs)
 
 

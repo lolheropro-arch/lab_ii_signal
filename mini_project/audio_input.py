@@ -11,10 +11,17 @@ audio_input.py — แหล่งรับเสียง 2 แบบ (ทุ�
     offset 2068  checksum = ผลรวม sample mod 2^16
 """
 import random
+import shutil
 import struct
+import subprocess
+import sys
+import tempfile
 import time
+import wave
+from pathlib import Path
 
 import numpy as np
+from scipy import signal
 
 import config as C
 
@@ -26,7 +33,8 @@ def list_serial_ports():
     """รายชื่อพอร์ตที่เสียบอยู่ (ใช้เติมใน dropdown ของ GUI)"""
     try:
         from serial.tools import list_ports
-        return [p.device for p in list_ports.comports()]
+        # พอร์ต USB ขึ้นก่อน: GUI ใช้ตัวแรกเป็นค่าเริ่มต้น และ /dev/ttyS* บน Linux มักเปิดไม่ได้
+        return [p.device for p in sorted(list_ports.comports(), key=lambda p: p.vid is None)]
     except Exception:
         return []
 
@@ -93,6 +101,67 @@ def record_serial(seconds, port=C.SERIAL_PORT, baud=C.BAUD_RATE, progress=None):
 
     samples = np.concatenate(blocks)[:n_needed].astype(np.float64)
     return samples, C.INPUT_FS
+
+
+# ---------------------------------------------------------------------
+# ลดเสียงพื้นหลัง และเล่นเสียงที่อัด
+# ---------------------------------------------------------------------
+def reduce_noise(x, fs):
+    """
+    ลดเสียงพื้นหลังด้วย 2 ขั้น (ไมค์ตัวเดียววัดระยะไม่ได้ จึงใช้ "ความดัง" แทนระยะ)
+    1. spectral gating : ความถี่ไหนดังไม่พ้นระดับพื้นของมันเอง ให้ลดลง
+    2. near gate       : ช่วงเวลาที่เบากว่าช่วงดังมาก ๆ ถือว่าเป็นเสียงไกล ให้ลดลง
+    """
+    x = np.asarray(x, dtype=np.float64)
+    x = x - x.mean()
+    _, _, Z = signal.stft(x, fs, nperseg=C.NOISE_NFFT)
+    mag = np.abs(Z) + 1e-12
+    floor = 10 ** (C.NOISE_FLOOR_DB / 20)
+
+    noise = np.percentile(mag, C.NOISE_PERCENTILE, axis=1, keepdims=True)
+    gain = np.clip(1 - C.NOISE_OVERSUB * noise / mag, floor, 1.0)
+
+    level = np.sqrt(np.sum(mag ** 2, axis=0))
+    near = level >= np.percentile(level, 95) * 10 ** (-C.NEAR_GATE_DB / 20)
+    gain = gain * np.where(near, 1.0, floor)
+
+    # เกลี่ยตามเวลา ลดเสียงกระพริบ (musical noise)
+    gain = signal.convolve2d(gain, np.ones((1, 5)) / 5, mode="same", boundary="symm")
+    _, y = signal.istft(Z * gain, fs, nperseg=C.NOISE_NFFT)
+    return y[:len(x)]
+
+
+def play_audio(x, fs):
+    """เล่นเสียงผ่านลำโพงโดยไม่รอจนจบ คืน process ไว้หยุดด้วย stop_audio()"""
+    y = np.asarray(x, dtype=np.float64)
+    y = y - y.mean()
+    peak = np.max(np.abs(y)) if y.size else 0.0
+    if peak > 0:
+        y = y / peak * 0.8                     # เผื่อขอบไว้ ไม่ให้แตกที่ลำโพง
+    path = Path(tempfile.gettempdir()) / "mini_shazam_last.wav"
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(int(fs))
+        w.writeframes((y * 32767).astype("<i2").tobytes())
+
+    if sys.platform.startswith("win"):
+        import winsound
+        winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC)
+        return None
+    for cmd in (["pw-play"], ["paplay"], ["aplay", "-q"], ["afplay"],
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "error"]):
+        if shutil.which(cmd[0]):
+            return subprocess.Popen(cmd + [str(path)])
+    raise RuntimeError("ไม่พบโปรแกรมเล่นเสียง (pw-play, paplay, aplay, afplay หรือ ffplay)")
+
+
+def stop_audio(player):
+    if sys.platform.startswith("win"):
+        import winsound
+        winsound.PlaySound(None, winsound.SND_PURGE)
+    elif player is not None:
+        player.terminate()
 
 
 # ---------------------------------------------------------------------

@@ -140,12 +140,14 @@ class FingerprintDB:
 
         score, song_id, best_offset, offs = scores[0]
 
-        # คะแนน "คู่แข่ง" = max(คะแนนเพลงอันดับ 2, ยอดสูงสุดอื่นใน histogram ของเพลงอันดับ 1)
+        # คะแนน "คู่แข่ง" = max(คะแนนเพลงอันดับ 2, ยอดอื่นใน histogram ของเพลงอันดับ 1)
         # เพลงที่ไม่มีในฐานข้อมูลจะได้คะแนนพอ ๆ กับคู่แข่ง → ratio ใกล้ 1 → ตอบ "ไม่พบ"
+        # ท่อนซ้ำในเพลงเดียวกันให้ยอดสูงหลายยอดได้ จึงตัดยอดอันดับต้น ๆ ออก C.SONG_REPEATS ยอด
         runner_up = scores[1][0] if len(scores) > 1 else 0
         counts = np.convolve(np.bincount(offs - offs.min()), [1, 1, 1], mode="same")
-        b = best_offset - offs.min()
-        counts[max(b - 3, 0):b + 4] = 0
+        for _ in range(C.SONG_REPEATS):
+            b = int(np.argmax(counts))
+            counts[max(b - 3, 0):b + 4] = 0
         runner_up = max(runner_up, int(counts.max()) if counts.size else 0)
         ratio = score / max(runner_up, 1)
 
