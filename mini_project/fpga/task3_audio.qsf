@@ -21,7 +21,7 @@ set_global_assignment -name SDC_FILE de10lite_audio.sdc
 
 # ---- top-level generics (0 = external MCP320x, 1 = MAX 10 ADC, 2 = test tone)
 set_parameter -name ADC_SELECT 0
-set_parameter -name FS_HZ 32000
+set_parameter -name FS_HZ 42000
 set_parameter -name ADDR_W 10
 set_parameter -name MCP_PART 3201
 set_parameter -name MCP_SCLK_HZ 800000

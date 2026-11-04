@@ -26,7 +26,7 @@ BAUD_RATE = 921_600
 SERIAL_TIMEOUT = 2.0         # วินาที — ถ้าไม่ได้ frame ที่ถูกต้องนานกว่านี้จะแจ้ง error
 
 # รูปแบบ frame ของ Task 3 (task3_esp32_bridge.ino)
-INPUT_FS = 32000             # sample rate ที่บอร์ดส่งมา (S/s) ต้องตรงกับ FS_HZ ใน fpga/task3_audio.qsf
+INPUT_FS = 42000             # sample rate ที่บอร์ดส่งมา (S/s) ต้องตรงกับ FS_HZ ใน fpga/task3_audio.qsf
 PLAY_FS = 16000              # sample rate ตอนกดเล่นเสียง (ตัดเสียงจี่ที่สูงกว่า 8 kHz ออก)
 BLOCK_SIZE = 1024            # จำนวน sample ต่อหนึ่งบล็อก
 SYNC_BYTES = b"\xAA\x55\x33\xCC"  # 4 ไบต์แรกของทุก frame

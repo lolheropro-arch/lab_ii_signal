@@ -72,7 +72,7 @@ static const int      PIN_DRDY     = 4;
 static const uint32_t SPI_HZ       = 1000000;   // 1..8 MHz (jumper wires: <= 4 MHz)
 static const uint32_t SERIAL_BAUD  = 921600;    // 921600 or 2000000 (must match host)
 static const uint16_t N            = 1024;      // must match FPGA ADDR_W (2^10)
-static const uint16_t FS_NOMINAL   = 32000;
+static const uint16_t FS_NOMINAL   = 42000;
 static const int      NUM_BUFS     = 6;         // ESP32-side block queue depth
 // ============================================================================
 
