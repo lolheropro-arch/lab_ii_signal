@@ -4,7 +4,7 @@
 ใช้หลัก **Audio Fingerprinting** ตามเปเปอร์ของ Avery Wang (ผู้ร่วมก่อตั้ง Shazam), ISMIR 2003
 
 ```
-ไมค์ ─► FPGA (สุ่ม 16 kS/s) ─► ESP32 ─USB─► Python: fingerprint ─► ค้นในฐานข้อมูล ─► ชื่อเพลง
+ไมค์ ─► FPGA (สุ่ม 32 kS/s) ─► ESP32 ─USB─► Python: fingerprint ─► ค้นในฐานข้อมูล ─► ชื่อเพลง
 ```
 
 ---
@@ -19,6 +19,8 @@
 | `audio_input.py` | รับเสียง 2 แบบ: ไมค์ผ่าน FPGA + ESP32 (Serial), ไฟล์ทดสอบ |
 | `app.py` | **โปรแกรมหลัก (GUI)** |
 | `experiment.py` | ทดลองวัดความแม่นยำอัตโนมัติ ได้ตาราง CSV + กราฟไว้ใส่รายงาน |
+| `fpga/` | โปรเจกต์ Quartus ของ Mini Shazam (สำเนาแยกจาก `task3/`) เปิด `task3_audio.qpf` |
+| `esp32/` | sketch ของ Mini Shazam (สำเนาแยกจาก `task3/`) |
 | `songs/` | ใส่ไฟล์เพลงที่นี่ |
 | `fingerprints.db` | ฐานข้อมูล (สร้างให้อัตโนมัติ ลบทิ้งได้ถ้าอยากเริ่มใหม่) |
 
@@ -77,12 +79,22 @@ Frame ที่ checksum ไม่ผ่านจะถูกข้าม แล
 
 | ค่า | ความหมาย |
 |---|---|
-| `INPUT_FS` | sample rate ที่บอร์ดส่งมา (16000) — DC offset จะถูกลบให้อัตโนมัติ |
+| `INPUT_FS` | sample rate ที่บอร์ดส่งมา (32000) ต้องตรงกับ `FS_HZ` ของ FPGA — DC offset จะถูกลบให้อัตโนมัติ |
 | `BLOCK_SIZE` | จำนวน sample ต่อบล็อก (1024) |
 | `SYNC_BYTES` | 4 ไบต์แรกของทุก frame |
 | `FRAME_HEADER_BYTES` | ความยาว header รวม sync (20) |
 | `SAMPLE_DTYPE` | `"<u2"` = uint16 |
 | `BAUD_RATE` | ต้องตรงกับ `Serial.begin()` (921600) |
+
+---
+
+## โค้ดฮาร์ดแวร์และ sample rate
+
+Mini Shazam ใช้โค้ด FPGA และ ESP32 ใน `fpga/` และ `esp32/` ของโฟลเดอร์นี้ แก้ได้โดยไม่กระทบ `task3/`
+
+FPGA สุ่มที่ 32 kS/s (`FS_HZ` ใน `fpga/task3_audio.qsf`) แล้ว Python ลดเหลือ 8 kHz (`FS` ใน `config.py`) ก่อนทำ fingerprint และลดเหลือ 16 kHz (`PLAY_FS`) ตอนกดเล่นเสียง วงจรไม่มีตัวกรอง anti-aliasing แบบ analog เมื่อสุ่มที่ 16 kS/s สัญญาณรบกวนแถว 13.7 kHz พับลงมาที่ 2.3 kHz ซึ่งอยู่ในช่วงที่ใช้จำเพลง การสุ่มที่ 32 kS/s ลดแถบ 2–3.8 kHz ตอนเงียบจากราว 7.4–8.4 เหลือ 2.3–2.6 (rms) แต่เมื่อเทียบ 32 กับ 40 kS/s สัญญาณรบกวนบางส่วนแค่ย้ายตำแหน่งความถี่ จึงน่าจะมีส่วนที่สูงกว่า Nyquist และต้องใช้ตัวกรอง analog จึงจะกันได้จริง ถ้าเปลี่ยนค่า ต้องแก้ `FS_HZ`, `FS_NOMINAL` ใน sketch และ `INPUT_FS` ให้ตรงกัน
+
+ถ้าถอดไฟ DE10-Lite ต้องโปรแกรม `fpga/output_files/task3_audio.sof` ใหม่ และ compile ก่อนถ้ายังไม่มีไฟล์นี้
 
 ---
 

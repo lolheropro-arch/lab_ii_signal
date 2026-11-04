@@ -135,6 +135,10 @@ def play_audio(x, fs):
     """เล่นเสียงผ่านลำโพงโดยไม่รอจนจบ คืน process ไว้หยุดด้วย stop_audio()"""
     y = np.asarray(x, dtype=np.float64)
     y = y - y.mean()
+    if int(fs) != C.PLAY_FS:
+        g = np.gcd(int(fs), C.PLAY_FS)
+        y = signal.resample_poly(y, C.PLAY_FS // g, int(fs) // g)
+        fs = C.PLAY_FS
     peak = np.max(np.abs(y)) if y.size else 0.0
     if peak > 0:
         y = y / peak * 0.8                     # เผื่อขอบไว้ ไม่ให้แตกที่ลำโพง

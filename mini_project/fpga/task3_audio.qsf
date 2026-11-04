@@ -1,0 +1,106 @@
+# task3_audio.qsf -- MCP3201 on JP1 pins 7/8/10 (main build)
+# Open task3_audio.qpf in Quartus. Switch between revisions with the drop-down
+# on the toolbar (task3_audio = MCP3201, task3_tone = internal test tone).
+
+set_global_assignment -name FAMILY "MAX 10"
+set_global_assignment -name DEVICE 10M50DAF484C7G
+set_global_assignment -name TOP_LEVEL_ENTITY de10lite_audio_top
+set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+
+# ---- source files
+set_global_assignment -name VHDL_FILE sample_tick_gen.vhd
+set_global_assignment -name VHDL_FILE mcp3202_reader.vhd
+set_global_assignment -name VHDL_FILE test_tone_gen.vhd
+set_global_assignment -name VHDL_FILE audio_block_buffer.vhd
+set_global_assignment -name VHDL_FILE spi_slave_block.vhd
+set_global_assignment -name VHDL_FILE de10lite_audio_top.vhd
+set_global_assignment -name SDC_FILE de10lite_audio.sdc
+
+# ---- top-level generics (0 = external MCP320x, 1 = MAX 10 ADC, 2 = test tone)
+set_parameter -name ADC_SELECT 0
+set_parameter -name FS_HZ 32000
+set_parameter -name ADDR_W 10
+set_parameter -name MCP_PART 3201
+set_parameter -name MCP_SCLK_HZ 800000
+
+# ---- pins (Terasic DE10-Lite User Manual, Tables 3-2 and 3-7)
+set_location_assignment PIN_P11 -to MAX10_CLK1_50
+set_location_assignment PIN_B8 -to KEY[0]
+set_location_assignment PIN_A7 -to KEY[1]
+set_location_assignment PIN_V10 -to spi_sclk   # JP1 1   ESP32-S3 UNO IO12 (D13, SCK)
+set_location_assignment PIN_W10 -to spi_mosi   # JP1 2   ESP32-S3 UNO IO11 (D11, MOSI)
+set_location_assignment PIN_V9 -to spi_miso   # JP1 3   ESP32-S3 UNO IO13 (D12, MISO)
+set_location_assignment PIN_W9 -to spi_cs_n   # JP1 4   ESP32-S3 UNO IO10 (D10, CS)
+set_location_assignment PIN_V8 -to drdy   # JP1 5   ESP32-S3 UNO IO14 (D7, DRDY)
+set_location_assignment PIN_W8 -to fs_tick   # JP1 6   scope CH1 (8 kHz square)
+set_location_assignment PIN_V7 -to adc_cs_n   # JP1 7   MCP3201 pin 5 CS  (MCP3202: pin 1)
+set_location_assignment PIN_W7 -to adc_sclk   # JP1 8   MCP3201 pin 7 CLK (MCP3202: pin 7)
+set_location_assignment PIN_W6 -to adc_din   # JP1 9   MCP3202 pin 5 DIN (MCP3201: not connected)
+set_location_assignment PIN_V5 -to adc_dout   # JP1 10  MCP3201 pin 6 DOUT (MCP3202: pin 6)
+set_location_assignment PIN_W5 -to blk_tick   # JP1 13  scope CH2 (block toggle)
+set_location_assignment PIN_C10 -to SW[0]
+set_location_assignment PIN_A8 -to LEDR[0]
+set_location_assignment PIN_C11 -to SW[1]
+set_location_assignment PIN_A9 -to LEDR[1]
+set_location_assignment PIN_D12 -to SW[2]
+set_location_assignment PIN_A10 -to LEDR[2]
+set_location_assignment PIN_C12 -to SW[3]
+set_location_assignment PIN_B10 -to LEDR[3]
+set_location_assignment PIN_A12 -to SW[4]
+set_location_assignment PIN_D13 -to LEDR[4]
+set_location_assignment PIN_B12 -to SW[5]
+set_location_assignment PIN_C13 -to LEDR[5]
+set_location_assignment PIN_A13 -to SW[6]
+set_location_assignment PIN_E14 -to LEDR[6]
+set_location_assignment PIN_A14 -to SW[7]
+set_location_assignment PIN_D14 -to LEDR[7]
+set_location_assignment PIN_B14 -to SW[8]
+set_location_assignment PIN_A11 -to LEDR[8]
+set_location_assignment PIN_F15 -to SW[9]
+set_location_assignment PIN_B11 -to LEDR[9]
+
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to MAX10_CLK1_50
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to KEY[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to KEY[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_sclk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_mosi
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_miso
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_cs_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to drdy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fs_tick
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to blk_tick
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to adc_cs_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to adc_sclk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to adc_din
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to adc_dout
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to spi_cs_n
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to adc_dout
+
+set_global_assignment -name LAST_QUARTUS_VERSION "20.1.1 Lite Edition"
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top

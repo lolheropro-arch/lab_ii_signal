@@ -1,0 +1,7 @@
+QUARTUS_VERSION = "18.1"
+DATE = "10:00:00  November 02, 2026"
+
+# Revisions
+
+PROJECT_REVISION = "task3_audio"
+PROJECT_REVISION = "task3_tone"
