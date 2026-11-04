@@ -97,11 +97,13 @@ class FingerprintDB:
             song, score, offset_sec, confident  → คำตอบ
             runner_up, ratio                    → คะแนนคู่แข่ง และ score / runner_up
             ranking                             → [(ชื่อเพลง, คะแนน), ...] อันดับต้น ๆ
+            candidates                          → [(ชื่อเพลง, คะแนน, ตำแหน่งในเพลงเป็นวินาที), ...]
             offsets                             → offset ทั้งหมดของเพลงอันดับ 1 (ไว้วาด histogram)
         """
         empty = {"song": None, "score": 0, "runner_up": 0, "ratio": 0.0,
                  "offset_sec": 0.0, "confident": False,
-                 "ranking": [], "offsets": np.array([]), "n_query_hashes": len(query_hashes)}
+                 "ranking": [], "candidates": [], "offsets": np.array([]),
+                 "n_query_hashes": len(query_hashes)}
         if not query_hashes:
             return empty
 
@@ -159,6 +161,8 @@ class FingerprintDB:
             "offset_sec": fp.frames_to_seconds(best_offset),
             "confident": score >= C.MIN_MATCHES and ratio >= C.MIN_RATIO,
             "ranking": [(names.get(s[1], "?"), s[0]) for s in scores[:top_n]],
+            "candidates": [(names.get(s[1], "?"), s[0], fp.frames_to_seconds(s[2]))
+                           for s in scores[:top_n]],
             "offsets": offs,
             "n_query_hashes": len(query_hashes),
         }

@@ -131,6 +131,32 @@ def reduce_noise(x, fs):
     return y[:len(x)]
 
 
+def filter_noise(x, fs):
+    """
+    ลดเสียงแอร์และสัญญาณรบกวน 2 ขั้น
+    1. band-pass  : เก็บช่วงเสียงร้องและทำนอง ตัดเสียงทุ้มกับเสียงซ่านอกช่วง
+    2. notch      : หาความถี่ที่ดังค้างตลอดคลิปด้วย percentile ตามเวลา แล้วตัดเฉพาะจุด
+                    โน้ตเพลงดังไม่ค้างตลอดจึงไม่ถูกเลือก เสียงเครื่องดังค้างจึงถูกเลือก
+    """
+    x = np.asarray(x, dtype=np.float64)
+    x = x - x.mean()
+    high = min(C.FILTER_HIGH, fs * 0.45)
+    y = signal.sosfiltfilt(signal.butter(4, [C.FILTER_LOW, high], "bandpass", fs=fs, output="sos"), x)
+
+    nperseg = min(int(fs * 0.25), len(x))
+    f, _, Z = signal.stft(y, fs, nperseg=nperseg)
+    floor = np.percentile(np.abs(Z), 30, axis=1)
+    local = signal.medfilt(floor, 31)
+    ratio_db = 20 * np.log10((floor + 1e-12) / (local + 1e-12))
+    peaks, _ = signal.find_peaks(ratio_db, height=C.FILTER_NOTCH_DB, distance=3)
+    peaks = peaks[(f[peaks] > C.FILTER_LOW) & (f[peaks] < high)]
+    peaks = peaks[np.argsort(ratio_db[peaks])[::-1][:C.FILTER_MAX_NOTCH]]
+    for fc in f[peaks]:
+        b, a = signal.iirnotch(fc, Q=30, fs=fs)
+        y = signal.filtfilt(b, a, y)
+    return y
+
+
 def play_audio(x, fs):
     """เล่นเสียงผ่านลำโพงโดยไม่รอจนจบ คืน process ไว้หยุดด้วย stop_audio()"""
     y = np.asarray(x, dtype=np.float64)
@@ -178,6 +204,30 @@ def add_noise(x, snr_db):
     p_signal = np.mean(x ** 2)
     p_noise = p_signal / (10 ** (snr_db / 10))
     return x + np.random.normal(0, np.sqrt(p_noise), size=x.shape)
+
+
+def find_song_file(name):
+    """หาไฟล์เพลงในโฟลเดอร์ songs/ จากชื่อเพลงในฐานข้อมูล"""
+    for p in sorted(C.SONGS_DIR.iterdir()):
+        if p.stem == name and p.suffix.lower() in C.AUDIO_EXTENSIONS:
+            return p
+    raise FileNotFoundError(f"ไม่พบไฟล์ของเพลง {name} ในโฟลเดอร์ songs/")
+
+
+def load_song_section(path, start, seconds):
+    """
+    ตัดท่อนเพลงที่ตรงกับคลิปที่อัด คืน (samples, C.PLAY_FS)
+    ถ้าท่อนล้ำก่อนต้นเพลงหรือเลยท้ายเพลง จะเติมความเงียบให้ยาวเท่าคลิป เวลาจึงเทียบกันได้ตรง ๆ
+    """
+    import librosa
+
+    n = int(round(seconds * C.PLAY_FS))
+    lead = int(round(max(-start, 0.0) * C.PLAY_FS))
+    y, _ = librosa.load(str(path), sr=C.PLAY_FS, mono=True, offset=max(start, 0.0),
+                        duration=max(n - lead, 0) / C.PLAY_FS)
+    out = np.zeros(n, dtype=np.float64)
+    out[lead:lead + len(y)] = y[:n - lead]
+    return out, C.PLAY_FS
 
 
 def load_test_clip(path, seconds, start=None, snr_db=None):
