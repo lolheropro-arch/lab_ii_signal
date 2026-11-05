@@ -225,8 +225,10 @@ class MiniShazamApp:
     def refresh_song_list(self):
         songs = self.db.list_songs()
         self.song_list.delete(0, tk.END)
+        stems = {p.stem for p in C.SONGS_DIR.iterdir() if p.suffix.lower() in C.AUDIO_EXTENSIONS}
         for name, duration, n in songs:
-            self.song_list.insert(tk.END, f"{name}   ({duration/60:.1f} นาที, {n:,} hash)")
+            missing = "" if name in stems else ", ไม่มีไฟล์เสียง"
+            self.song_list.insert(tk.END, f"{name}   ({duration/60:.1f} นาที, {n:,} hash{missing})")
         total = sum(s[2] for s in songs)
         self.db_info.config(text=f"{len(songs)} เพลง, {total:,} hash")
 

@@ -11,6 +11,7 @@ database.py — เก็บ hash ของเพลง และค้นหา
     ถ้าเป็นเพลงที่ถูก offset ส่วนใหญ่จะ "เท่ากัน" → histogram มีแท่งสูงโด่ง
     ถ้าเป็นเพลงอื่น offset จะกระจายมั่ว ๆ ไม่มีแท่งสูง
 """
+import shutil
 import sqlite3
 import threading
 from collections import defaultdict
@@ -58,11 +59,20 @@ class FingerprintDB:
         path = Path(path)
         name = path.stem
         if self.has_song(name):
+            self._keep_copy(path)             # เพลงเดิมที่ไฟล์หาย เลือกซ้ำเพื่อกู้ไฟล์คืนได้
             return False
         y = fp.load_audio_file(path)
         result = fp.fingerprint(y, C.FS)
         self._insert(name, len(y) / C.FS, result["hashes"])
+        self._keep_copy(path)
         return True
+
+    @staticmethod
+    def _keep_copy(path):
+        """เก็บสำเนาไว้ใน songs/ เพราะตอนเล่นท่อนเพลงจะหาไฟล์จากโฟลเดอร์นี้ด้วยชื่อเพลง"""
+        dest = C.SONGS_DIR / path.name
+        if not dest.exists():
+            shutil.copy2(path, dest)
 
     def _insert(self, name, duration, hashes):
         with self.lock:
